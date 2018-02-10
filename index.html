@@ -1,0 +1,162 @@
+<!DOCTYPE html>  
+<html lang="en">  
+<head>  
+    <meta charset="UTF-8"> 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/> 
+    <title>群聊</title>  
+</head>
+<style>
+    body,html{
+        padding: 2rem;
+        margin: 0;
+        color: #42b983;
+    }
+    .send{
+        width: 100%;
+        float: left;
+        font-size: 2rem;
+    }
+    #showbox{
+        width: 65%; 
+        float: right;
+
+    }
+    .item-send{
+        height: 10rem;
+        display: flex;
+        align-items: center;
+    }
+    #msginput,#tupian{
+        margin-left: 3rem;
+        height: 5rem;
+        width: 65%;
+        border: 1px solid #42b983;
+        
+    }
+    .btn-box{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    input{
+        font-size: 2rem;
+    }
+    input::-webkit-input-placeholder {
+        color: #999;
+        font-size: 2rem;
+        margin-left: 1rem;
+    }
+    input:-ms-input-placeholder { 
+	color: #999;
+    }
+    input:-moz-placeholder { 
+        color: #999;
+    }
+    input::-moz-placeholder { 
+	color: #999;
+    }
+    .file-box{
+        width: 100%;
+        margin-top: 3rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .file-box button,.file-box input{
+        font-size: 2rem;
+    }
+    .file-box #tupian{
+        margin-left: 0;
+        border: none;
+    }
+    button{
+        width: 10rem;
+        height: 5rem;
+        border-radius: 20px;
+        font-size: 2rem;
+        color: #42b983;
+        border: 1px solid #42b983;
+        background: transparent;
+    }
+   
+</style>  
+<body>  
+        <!-- http://blog.csdn.net/wang8088498/article/details/52194394 -->
+        <!-- http://www.cnblogs.com/xiezhengcai/p/3956401.html -->
+        <!-- http://cnodejs.org/topic/50a1fcc7637ffa4155b5a264 -->
+<h1>群聊</h1>  
+<div class="send"> 
+    <div class="item-send">
+        <span>输入 : </span>
+        <input type="text" id="msginput" placeholder="输入信息"> 
+    </div> 
+    <div class="btn-box">
+        <button id="msgbtn">发送</button>  
+    </div>  
+    <div class="file-box">
+        <input type="file" id="tupian">  
+        <button onclick="sendImg()">发送图片</button> 
+    </div> 
+</div>  
+<div  id="showbox"></div>  
+</body>  
+<script src="https://cdn.bootcss.com/socket.io/2.0.4/socket.io.js"></script>
+<!-- <script src="./socket.io/socket.io.js"></script> -->
+<!-- <script src="http://localhost:3000/socket.io/socket.io.js"></script> -->
+
+<script>  
+    let socket = io.connect('http://localhost:3000');  
+    let btn = document.getElementById('msgbtn');  
+    let msginput = document.getElementById('msginput');  
+    let showbox = document.getElementById('showbox'); 
+    
+    let setUsername = function () {  
+
+         let _username = _$inputname.val().trim();    //得到用户名  
+        if( _username ) {  
+            socket.emit('login',{username: _username});     
+        }  
+    };  
+      
+    // _$loginButton.on('click',function (event) {   
+    //     setUsername();  
+    // });  
+      
+    // _$inputname.on('keyup',function (event) {      
+    //     if(event.keyCode === 13) {                
+    //         setUsername();  
+    //     }  
+    // })  
+    
+    btn.addEventListener('click', (event) => {  
+        let msg = msginput.value;  
+        let data = {msg: msg};  
+        socket.emit('sendMessage', data);  
+    });  
+    socket.on('receiveMessage', (data) => {  
+        console.log('收到');  
+        let message = document.createElement('div');  
+        message.innerHTML = `${data.id}: ${data.msg}`;  
+        showbox.appendChild(message);  
+    });  
+    let sendImg = () => {  
+        let Imginput = document.getElementById('tupian');  
+        let file = Imginput.files[0];       //得到该图片  
+        let reader = new FileReader();      //创建一个FileReader对象，进行下一步的操作  
+        reader.readAsDataURL(file);              //通过readAsDataURL读取图片  
+  
+        reader.onload =function () {            //读取完毕会自动触发，读取结果保存在result中  
+            let data = {img: this.result};  
+            socket.emit('sendImg', data);  
+        }  
+    };  
+    socket.on('receiveImg', (data) => {  
+        let ImgDIV = document.createElement('div');  
+        ImgDIV.innerHTML = `<div>${data.id}: <img src="${data.img}" /></div>`;  
+        showbox.appendChild(ImgDIV);  
+    })  
+
+
+</script>  
+  
+</html> 
